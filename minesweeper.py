@@ -1,26 +1,7 @@
 import random
 
 
-class Cell:
-    """A helper class to keep track of a cell"""
-
-    def __init__(self, i, j):  # i = down, j = right therefore self = world[i][j]
-        self.mine = False
-        self.opened = False
-        self.flagged = False
-        self.location = (i, j)
-
-    def open(self):
-        self.opened = True
-
-    def flag(self):
-        self.flagged = not self.flagged
-
-    def set_mine(self):
-        self.mine = True
-
-
-class Board:
+class Game:
     ortho_available = [(-1, 0), (0, -1), (0, 1), (1, 0)]
     diag_available = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
     standard_available = [(-1, -1), (-1, 0), (-1, 1),
@@ -29,20 +10,46 @@ class Board:
     knight_available = [(-2, -1), (-2, 1), (-1, -2), (-1, 2),
                         (1, -2), (1, 2), (2, -1), (2, 1)]
 
-    def __init__(self, l=10, h=10, n=10, available="standard", show=False):
-        self.LENGTH = l
-        self.HEIGHT = h
-        self.NUM_MINES = n
-        self.available = self.__getattribute__(available + "_available")
-        self.show_mines = show
+    class Cell:
+        """A helper class to keep track of a cell"""
+
+        # i = down, j = right therefore self = world[i][j]
+        def __init__(self, i, j):
+            self.mine = False
+            self.opened = False
+            self.flagged = False
+            self.location = (i, j)
+
+        def open(self):
+            self.opened = True
+
+        def flag(self):
+            self.flagged = not self.flagged
+
+        def set_mine(self):
+            self.mine = True
+
+    def __init__(self, **kwargs):
+        self.LENGTH = kwargs.get("LENGTH", 10)
+        self.HEIGHT = kwargs.get("HEIGHT", 10)
+        self.NUM_MINES = kwargs.get("NUM_MINES", 10)
+        self.available = self.__getattribute__(
+            kwargs.get("available", "standard") + "_available")
+        self.show_mines = kwargs.get("show_mines", False)
+
+        self.reset()
+
+    def reset(self):
 
         # Create cells
-        self.cells = tuple(tuple(Cell(i, j) for j in range(self.LENGTH)) for i in range(self.HEIGHT))
+        self.cells = tuple(tuple(Game.Cell(i, j) for j in range(self.LENGTH))
+                           for i in range(self.HEIGHT))
 
         # Set mines randomly, up to NUM_MINES
         mines = []
         while len(mines) < self.NUM_MINES:
-            candidate = random.choice(list(cell for row in self.cells for cell in row))
+            candidate = random.choice(
+                list(cell for row in self.cells for cell in row))
             if candidate.mine:
                 continue
             else:
@@ -79,7 +86,8 @@ class Board:
     def parse_input(self):  # TODO: FIX
         """Function to parse user input"""
         while True:
-            user_choice = input("Your choice [\"(f)i j\" for the cell i down and j right, f to flag]\n\t> ")
+            user_choice = input(
+                "Your choice [\"(f)i j\" for the cell i down and j right, f to flag]\n\t> ")
             try:
                 flag = False
                 if user_choice[0] == 'f':
@@ -89,7 +97,8 @@ class Board:
                 cell = self.cells[i][j]
                 break
             except IndexError:
-                print("Please use i between 0 and {} and j between 0 and {}".format(self.LENGTH, self.HEIGHT))
+                print("Please use i between 0 and {} and j between 0 and {}".format(
+                    self.LENGTH, self.HEIGHT))
             except ValueError:
                 if user_choice == 'a':
                     raise KeyboardInterrupt
@@ -110,15 +119,15 @@ class Board:
             if open_others and self.get_number_mines(cell) - self.get_number_flags(cell) == 0:
                 # If number of surrounding mines equals num of surrounding flags, open all surrounding cells
                 for target in self.get_neighbors(cell):
-                        if not target.opened and not target.flagged:
-                            self.open(target, open_others=False)
+                    if not target.opened and not target.flagged:
+                        self.open(target, open_others=False)
         elif cell.mine:
             self.is_playing = False
         else:
             cell.open()
             if self.get_number_mines(cell) == 0:
                 for target in self.get_neighbors(cell):
-                        self.open(target)
+                    self.open(target)
 
     def get_neighbors(self, cell):
         """Returns a list of the cells around the cell"""
@@ -153,7 +162,8 @@ def main():
             except ValueError:
                 user_in_height = 10
             try:
-                user_in_num__mines = int(input("Number of mines (default 10)\t > "))
+                user_in_num__mines = int(
+                    input("Number of mines (default 10)\t > "))
             except ValueError:
                 user_in_num__mines = 10
             try:
@@ -163,14 +173,15 @@ def main():
                 user_in_type = 1
             if user_in_type not in [1, 2, 3, 4]:
                 user_in_type = 1
-            board = Board(
-                l=user_in_length,
-                h=user_in_height,
-                n=user_in_num__mines,
-                available={1: "standard", 2: "ortho", 3: "diag", 4: "knight"}[user_in_type],
+            board = Game(
+                LENGTH=user_in_length,
+                HEIGHT=user_in_height,
+                NUM_MINES=user_in_num__mines,
+                available={1: "standard", 2: "ortho",
+                           3: "diag", 4: "knight"}[user_in_type],
             )
         else:
-            board = Board()
+            board = Game()
 
         while board.is_playing and not board.solved:
             print(board)
