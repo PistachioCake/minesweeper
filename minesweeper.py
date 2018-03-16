@@ -29,12 +29,12 @@ class Board:
     knight_available = [(-2, -1), (-2, 1), (-1, -2), (-1, 2),
                         (1, -2), (1, 2), (2, -1), (2, 1)]
 
-    def __init__(self, **kwargs):
-        self.LENGTH = kwargs.get("LENGTH", 10)
-        self.HEIGHT = kwargs.get("HEIGHT", 10)
-        self.NUM_MINES = kwargs.get("NUM_MINES", 10)
-        self.available = self.__getattribute__(kwargs.get("available", "standard") + "_available")
-        self.show_mines = kwargs.get("show_mines", False)
+    def __init__(self, l=10, h=10, n=10, available="standard", show=False):
+        self.LENGTH = l
+        self.HEIGHT = h
+        self.NUM_MINES = n
+        self.available = self.__getattribute__(available + "_available")
+        self.show_mines = show
 
         # Create cells
         self.cells = tuple(tuple(Cell(i, j) for j in range(self.LENGTH)) for i in range(self.HEIGHT))
@@ -164,9 +164,9 @@ def main():
             if user_in_type not in [1, 2, 3, 4]:
                 user_in_type = 1
             board = Board(
-                LENGTH=user_in_length,
-                HEIGHT=user_in_height,
-                NUM_MINES=user_in_num__mines,
+                l=user_in_length,
+                h=user_in_height,
+                n=user_in_num__mines,
                 available={1: "standard", 2: "ortho", 3: "diag", 4: "knight"}[user_in_type],
             )
         else:
